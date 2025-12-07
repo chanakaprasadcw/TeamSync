@@ -1,0 +1,7 @@
+{
+  "name": "TeamSync - Task & Time Tracker",
+  "description": "A comprehensive mobile-first application for workforce management. Features role-based access for Admins (team structure), Managers (task assignment with points), and Employees (GPS-verified clock-in/out and gamified task completion).",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
