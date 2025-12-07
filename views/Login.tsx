@@ -76,7 +76,7 @@ export const LoginView: React.FC = () => {
                                     value={orgName}
                                     onChange={(e) => setOrgName(e.target.value)}
                                     placeholder="Acme Corp"
-                                    className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                                    className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-slate-900 font-medium placeholder:text-slate-300"
                                 />
                             </div>
                         </div>
@@ -87,7 +87,7 @@ export const LoginView: React.FC = () => {
                                 value={adminName}
                                 onChange={(e) => setAdminName(e.target.value)}
                                 placeholder="Your Name"
-                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-slate-900 font-medium placeholder:text-slate-300"
                             />
                         </div>
                     </>
@@ -100,7 +100,7 @@ export const LoginView: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@company.com"
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-slate-900 font-medium placeholder:text-slate-300"
                     />
                 </div>
 
@@ -111,7 +111,7 @@ export const LoginView: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-slate-900 font-medium placeholder:text-slate-300"
                     />
                 </div>
                 

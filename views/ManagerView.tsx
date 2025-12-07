@@ -115,7 +115,7 @@ export const ManagerView: React.FC = () => {
                   type="text" 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
                   placeholder="e.g. Sales Follow-up"
                   required
                 />
@@ -136,7 +136,7 @@ export const ManagerView: React.FC = () => {
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all h-24 resize-none"
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all h-24 resize-none text-slate-900"
                   placeholder="Describe the task..."
                   required
                 />
@@ -148,7 +148,7 @@ export const ManagerView: React.FC = () => {
                     <select 
                         value={assignedTo}
                         onChange={(e) => setAssignedTo(e.target.value)}
-                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm"
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
                     >
                         <option value="ALL">Entire Team</option>
                         {myEmployees.map(emp => (
@@ -165,7 +165,7 @@ export const ManagerView: React.FC = () => {
                         step="10"
                         value={points}
                         onChange={(e) => setPoints(Number(e.target.value))}
-                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm"
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
                     />
                 </div>
               </div>

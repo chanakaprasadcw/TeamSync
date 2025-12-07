@@ -80,7 +80,7 @@ export const AdminView: React.FC = () => {
                     <select 
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value as UserRole, user.managerId)}
-                        className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 outline-none"
+                        className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-900 outline-none font-medium"
                     >
                         {Object.values(UserRole).map(role => (
                             <option key={role} value={role}>{role}</option>
@@ -94,7 +94,7 @@ export const AdminView: React.FC = () => {
                         <select 
                             value={user.managerId || ''}
                             onChange={(e) => updateUserRole(user.id, user.role, e.target.value)}
-                            className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 outline-none w-32 truncate"
+                            className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-900 outline-none w-32 truncate font-medium"
                         >
                             <option value="">No Manager</option>
                             {managers.map(m => (
@@ -126,7 +126,7 @@ export const AdminView: React.FC = () => {
                   type="text" 
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900"
                   required
                 />
               </div>
@@ -137,7 +137,7 @@ export const AdminView: React.FC = () => {
                   type="email" 
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900"
                   required
                 />
               </div>
@@ -148,7 +148,7 @@ export const AdminView: React.FC = () => {
                   type="password" 
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900"
                   required
                 />
               </div>
@@ -159,7 +159,7 @@ export const AdminView: React.FC = () => {
                     <select 
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value as UserRole)}
-                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm"
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
                     >
                         <option value={UserRole.MANAGER}>Manager</option>
                         <option value={UserRole.EMPLOYEE}>Employee</option>
@@ -171,7 +171,7 @@ export const AdminView: React.FC = () => {
                         <select 
                             value={newManagerId}
                             onChange={(e) => setNewManagerId(e.target.value)}
-                            className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm"
+                            className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
                         >
                             <option value="">Select...</option>
                             {managers.map(m => (

@@ -37,10 +37,10 @@ const DEFAULT_ORG_ID = 'org_1';
 const INITIAL_ORG: Organization = { id: DEFAULT_ORG_ID, name: 'Demo Corp', createdAt: Date.now() };
 
 const INITIAL_USERS: User[] = [
-  { id: '1', organizationId: DEFAULT_ORG_ID, name: 'Admin User', email: 'admin@team.com', password: '123', role: UserRole.ADMIN, points: 0, avatar: 'https://picsum.photos/200' },
-  { id: '2', organizationId: DEFAULT_ORG_ID, name: 'Sarah Manager', email: 'manager@team.com', password: '123', role: UserRole.MANAGER, points: 0, avatar: 'https://picsum.photos/201' },
-  { id: '3', organizationId: DEFAULT_ORG_ID, name: 'John Employee', email: 'john@team.com', password: '123', role: UserRole.EMPLOYEE, managerId: '2', points: 120, avatar: 'https://picsum.photos/202' },
-  { id: '4', organizationId: DEFAULT_ORG_ID, name: 'Jane Doe', email: 'jane@team.com', password: '123', role: UserRole.EMPLOYEE, managerId: '2', points: 450, avatar: 'https://picsum.photos/203' },
+  { id: '1', organizationId: DEFAULT_ORG_ID, name: 'Admin User', email: 'admin@team.com', password: '123', role: UserRole.ADMIN, points: 0, avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=random' },
+  { id: '2', organizationId: DEFAULT_ORG_ID, name: 'Sarah Manager', email: 'manager@team.com', password: '123', role: UserRole.MANAGER, points: 0, avatar: 'https://ui-avatars.com/api/?name=Sarah+Manager&background=random' },
+  { id: '3', organizationId: DEFAULT_ORG_ID, name: 'John Employee', email: 'john@team.com', password: '123', role: UserRole.EMPLOYEE, managerId: '2', points: 120, avatar: 'https://ui-avatars.com/api/?name=John+Employee&background=random' },
+  { id: '4', organizationId: DEFAULT_ORG_ID, name: 'Jane Doe', email: 'jane@team.com', password: '123', role: UserRole.EMPLOYEE, managerId: '2', points: 450, avatar: 'https://ui-avatars.com/api/?name=Jane+Doe&background=random' },
 ];
 
 const INITIAL_TASKS: Task[] = [
@@ -49,13 +49,33 @@ const INITIAL_TASKS: Task[] = [
 ];
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  
-  // "Backend" State
-  const [allOrgs, setAllOrgs] = useState<Organization[]>([INITIAL_ORG]);
-  const [allUsers, setAllUsers] = useState<User[]>(INITIAL_USERS);
-  const [allTasks, setAllTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [allLogs, setAllLogs] = useState<TimeLog[]>([]);
+  // Helper to load from localStorage with fallback
+  const loadInfo = <T,>(key: string, fallback: T): T => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  // State initialization with persistence
+  const [currentUser, setCurrentUser] = useState<User | null>(() => loadInfo('ts_currentUser', null));
+  const [allOrgs, setAllOrgs] = useState<Organization[]>(() => loadInfo('ts_allOrgs', [INITIAL_ORG]));
+  const [allUsers, setAllUsers] = useState<User[]>(() => loadInfo('ts_allUsers', INITIAL_USERS));
+  const [allTasks, setAllTasks] = useState<Task[]>(() => loadInfo('ts_allTasks', INITIAL_TASKS));
+  const [allLogs, setAllLogs] = useState<TimeLog[]>(() => loadInfo('ts_allLogs', []));
+
+  // Persistence Effects
+  useEffect(() => {
+    if (currentUser) localStorage.setItem('ts_currentUser', JSON.stringify(currentUser));
+    else localStorage.removeItem('ts_currentUser');
+  }, [currentUser]);
+
+  useEffect(() => localStorage.setItem('ts_allOrgs', JSON.stringify(allOrgs)), [allOrgs]);
+  useEffect(() => localStorage.setItem('ts_allUsers', JSON.stringify(allUsers)), [allUsers]);
+  useEffect(() => localStorage.setItem('ts_allTasks', JSON.stringify(allTasks)), [allTasks]);
+  useEffect(() => localStorage.setItem('ts_allLogs', JSON.stringify(allLogs)), [allLogs]);
 
   // Derived State (Scoped to Current User's Org)
   const organization = currentUser ? allOrgs.find(o => o.id === currentUser.organizationId) || null : null;
