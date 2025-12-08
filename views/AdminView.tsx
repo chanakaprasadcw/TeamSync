@@ -1,41 +1,58 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/store';
 import { Layout } from '../components/Layout';
-import { UserRole } from '../types';
-import { Trash2, Shield, Plus, X } from 'lucide-react';
+import { UserRole, ROLE_HIERARCHY } from '../types';
+import { Trash2, Shield, Plus, X, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
   const { users, organization, addUser, updateUserRole, deleteUser } = useStore();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
 
   // New User Form State
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState<UserRole>(UserRole.EMPLOYEE);
+  const [newRole, setNewRole] = useState<UserRole>(UserRole.ENGINEER);
   const [newManagerId, setNewManagerId] = useState('');
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const managers = users.filter(u => u.role === UserRole.MANAGER);
+  // Filter potential managers based on the selected new role
+  // A manager must have a lower hierarchy number (higher rank) than the new user
+  const availableManagers = users.filter(u => 
+    ROLE_HIERARCHY[u.role] < ROLE_HIERARCHY[newRole]
+  );
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || !newEmail || !newPassword) return;
 
-    addUser({
+    setIsSubmitting(true);
+    
+    await addUser({
         name: newName,
         email: newEmail,
         password: newPassword,
         role: newRole,
-        managerId: newRole === UserRole.EMPLOYEE ? newManagerId : undefined,
+        managerId: newManagerId || undefined,
     });
+    
+    setIsSubmitting(false);
     setShowAddModal(false);
+    
+    setSuccessToast(`Invitation sent to ${newEmail}`);
+    setTimeout(() => setSuccessToast(''), 4000);
+
     // Reset form
     setNewName('');
     setNewEmail('');
     setNewPassword('');
-    setNewRole(UserRole.EMPLOYEE);
+    setNewRole(UserRole.ENGINEER);
     setNewManagerId('');
   };
+
+  const roleOptions = Object.values(UserRole).filter(r => r !== UserRole.ADMIN);
 
   return (
     <Layout title={organization?.name || "Admin Panel"}>
@@ -55,13 +72,14 @@ export const AdminView: React.FC = () => {
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         {users.map(user => (
           <div key={user.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-3">
               <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full bg-slate-200 object-cover" />
               <div>
-                <h4 className="font-bold text-slate-800">{user.name} <span className="text-[10px] text-slate-400 font-normal">({user.role})</span></h4>
+                <h4 className="font-bold text-slate-800">{user.name}</h4>
+                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wide">{user.role.replace('_', ' ')}</p>
                 <p className="text-xs text-slate-400">{user.email}</p>
               </div>
               <div className="ml-auto">
@@ -80,15 +98,15 @@ export const AdminView: React.FC = () => {
                     <select 
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value as UserRole, user.managerId)}
-                        className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-900 outline-none font-medium"
+                        className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-900 outline-none font-medium max-w-[150px]"
                     >
                         {Object.values(UserRole).map(role => (
-                            <option key={role} value={role}>{role}</option>
+                            <option key={role} value={role}>{role.replace('_', ' ')}</option>
                         ))}
                     </select>
                 </div>
 
-                {user.role === UserRole.EMPLOYEE && (
+                {user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER && (
                     <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-slate-500">Reports To</label>
                         <select 
@@ -97,8 +115,10 @@ export const AdminView: React.FC = () => {
                             className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-900 outline-none w-32 truncate font-medium"
                         >
                             <option value="">No Manager</option>
-                            {managers.map(m => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
+                            {users
+                                .filter(u => ROLE_HIERARCHY[u.role] < ROLE_HIERARCHY[user.role])
+                                .map(m => (
+                                <option key={m.id} value={m.id}>{m.name} ({m.role.replace('_',' ')})</option>
                             ))}
                         </select>
                     </div>
@@ -107,6 +127,14 @@ export const AdminView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Success Toast */}
+      {successToast && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-in z-[100]">
+              <CheckCircle2 size={18} className="text-green-400" />
+              <span className="text-xs font-semibold">{successToast}</span>
+          </div>
+      )}
 
       {/* Add User Modal */}
       {showAddModal && (
@@ -159,34 +187,43 @@ export const AdminView: React.FC = () => {
                     <select 
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value as UserRole)}
-                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900"
                     >
-                        <option value={UserRole.MANAGER}>Manager</option>
-                        <option value={UserRole.EMPLOYEE}>Employee</option>
+                        {roleOptions.map(r => (
+                            <option key={r} value={r}>{r.replace('_', ' ')}</option>
+                        ))}
                     </select>
                 </div>
-                {newRole === UserRole.EMPLOYEE && (
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1">Manager</label>
-                        <select 
-                            value={newManagerId}
-                            onChange={(e) => setNewManagerId(e.target.value)}
-                            className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
-                        >
-                            <option value="">Select...</option>
-                            {managers.map(m => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                )}
+                <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Reports To</label>
+                    <select 
+                        value={newManagerId}
+                        onChange={(e) => setNewManagerId(e.target.value)}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900"
+                        disabled={availableManagers.length === 0}
+                    >
+                        <option value="">{availableManagers.length === 0 ? 'No higher rank avail.' : 'Select Manager...'}</option>
+                        {availableManagers.map(m => (
+                            <option key={m.id} value={m.id}>{m.name} ({m.role.replace('_',' ')})</option>
+                        ))}
+                    </select>
+                </div>
               </div>
 
               <button 
                 type="submit" 
-                className="w-full bg-purple-600 text-white font-bold py-4 rounded-xl mt-4 hover:bg-purple-700 active:scale-95 transition-all shadow-lg shadow-purple-200"
+                disabled={isSubmitting}
+                className="w-full bg-purple-600 text-white font-bold py-4 rounded-xl mt-4 hover:bg-purple-700 active:scale-95 transition-all shadow-lg shadow-purple-200 flex items-center justify-center gap-2"
               >
-                Create Account
+                {isSubmitting ? (
+                    <>
+                        <Loader2 size={18} className="animate-spin" /> Sending Invite...
+                    </>
+                ) : (
+                    <>
+                        <Mail size={18} /> Send Invitation
+                    </>
+                )}
               </button>
             </form>
           </div>

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useStore } from '../services/store';
 import { Layout } from '../components/Layout';
 import { generateTaskDescription } from '../services/gemini';
-import { UserRole, Task } from '../types';
-import { Plus, Sparkles, Users, Briefcase, X } from 'lucide-react';
+import { UserRole, Task, ROLE_HIERARCHY } from '../types';
+import { Plus, Sparkles, Users, Briefcase, X, Clock, MapPin, Trophy } from 'lucide-react';
 
 export const ManagerView: React.FC = () => {
-  const { users, currentUser, tasks, createTask } = useStore();
+  const { users, currentUser, tasks, createTask, clockIn, clockOut, currentLog } = useStore();
   const [showModal, setShowModal] = useState(false);
   
   // Form State
@@ -16,7 +16,17 @@ export const ManagerView: React.FC = () => {
   const [points, setPoints] = useState(50);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const myEmployees = users.filter(u => u.managerId === currentUser?.id || u.role === UserRole.EMPLOYEE);
+  // Time Log State
+  const [loadingLoc, setLoadingLoc] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Logic: I can see anyone who is below me in the hierarchy
+  // AND belongs to my organization
+  const mySubordinates = users.filter(u => 
+    currentUser && 
+    ROLE_HIERARCHY[u.role] > ROLE_HIERARCHY[currentUser.role]
+  );
+
   const myTasks = tasks.filter(t => t.assignedBy === currentUser?.id).sort((a,b) => b.createdAt - a.createdAt);
 
   const handleAI = async () => {
@@ -26,6 +36,34 @@ export const ManagerView: React.FC = () => {
     setDescription(desc);
     setIsGenerating(false);
   };
+
+  const handleClockAction = () => {
+    setLoadingLoc(true);
+    setErrorMsg('');
+    if (!navigator.geolocation) {
+      setErrorMsg("Geolocation is not supported by your browser");
+      setLoadingLoc(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+        if (currentLog && !currentLog.clockOut) {
+          clockOut(loc);
+        } else {
+          clockIn(loc);
+        }
+        setLoadingLoc(false);
+      },
+      (err) => {
+        setErrorMsg("Unable to retrieve location. Please allow access.");
+        setLoadingLoc(false);
+      }
+    );
+  };
+
+  const isClockedIn = currentLog && !currentLog.clockOut;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,11 +87,56 @@ export const ManagerView: React.FC = () => {
   return (
     <Layout title="Team Management">
       
+      {/* Time Tracking Card */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-slate-500 text-sm">Attendance</p>
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              {isClockedIn ? 'On Duty' : 'Off Duty'}
+            </h2>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${isClockedIn ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+            {isClockedIn ? 'Active' : 'Offline'}
+          </div>
+        </div>
+
+        <button
+          onClick={handleClockAction}
+          disabled={loadingLoc}
+          className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${
+            isClockedIn 
+              ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-200' 
+              : 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200'
+          }`}
+        >
+          {loadingLoc ? (
+            <span className="animate-pulse">Locating...</span>
+          ) : (
+            <>
+              {isClockedIn ? <Clock className="rotate-180" /> : <Clock />}
+              {isClockedIn ? 'Clock Out' : 'Clock In'}
+            </>
+          )}
+        </button>
+        
+        {errorMsg && <p className="text-red-500 text-xs mt-2 text-center">{errorMsg}</p>}
+
+        {currentLog && (
+            <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                <span>In: {new Date(currentLog.clockIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                {currentLog.locationIn && (
+                    <span className="flex items-center gap-1"><MapPin size={10} /> {currentLog.locationIn.lat.toFixed(4)}, {currentLog.locationIn.lng.toFixed(4)}</span>
+                )}
+            </div>
+        )}
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-500 text-white p-4 rounded-2xl shadow-blue-200 shadow-lg">
-            <h3 className="text-3xl font-bold">{myEmployees.length}</h3>
-            <p className="text-blue-100 text-sm">Team Members</p>
+            <h3 className="text-3xl font-bold">{mySubordinates.length}</h3>
+            <p className="text-blue-100 text-sm">Members Below</p>
         </div>
         <div className="bg-white text-slate-800 p-4 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-3xl font-bold">{myTasks.filter(t => t.status === 'COMPLETED').length}</h3>
@@ -73,6 +156,9 @@ export const ManagerView: React.FC = () => {
 
       {/* Task List */}
       <div className="space-y-3 pb-20">
+        {myTasks.length === 0 && (
+            <p className="text-sm text-slate-400 italic">No tasks assigned yet.</p>
+        )}
         {myTasks.map(task => {
             const assignee = users.find(u => u.id === task.assignedTo);
             return (
@@ -86,7 +172,7 @@ export const ManagerView: React.FC = () => {
                     <div className="flex justify-between items-end mt-2 text-xs text-slate-500">
                         <div className="flex items-center gap-1">
                             <Users size={12} />
-                            {task.assignedTo === 'ALL' ? 'Entire Team' : assignee?.name || 'Unknown'}
+                            {task.assignedTo === 'ALL' ? 'Entire Sub-Team' : assignee?.name || 'Unknown'}
                         </div>
                         <div className="font-bold text-slate-700">
                             {task.points} pts
@@ -116,7 +202,7 @@ export const ManagerView: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
-                  placeholder="e.g. Sales Follow-up"
+                  placeholder="e.g. Site Inspection"
                   required
                 />
               </div>
@@ -150,9 +236,9 @@ export const ManagerView: React.FC = () => {
                         onChange={(e) => setAssignedTo(e.target.value)}
                         className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-900"
                     >
-                        <option value="ALL">Entire Team</option>
-                        {myEmployees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                        <option value="ALL">All Subordinates</option>
+                        {mySubordinates.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name} ({emp.role.replace('_',' ')})</option>
                         ))}
                     </select>
                 </div>

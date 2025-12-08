@@ -13,16 +13,22 @@ const Main: React.FC = () => {
     return <LoginView />;
   }
 
-  switch (currentUser.role) {
-    case UserRole.ADMIN:
-      return <AdminView />;
-    case UserRole.MANAGER:
-      return <ManagerView />;
-    case UserRole.EMPLOYEE:
-      return <EmployeeView />;
-    default:
-      return <LoginView />;
+  // Routing Logic based on Hierarchy
+  if (currentUser.role === UserRole.ADMIN) {
+    return <AdminView />;
   }
+
+  // Management roles who can assign tasks
+  if (
+    currentUser.role === UserRole.MANAGER || 
+    currentUser.role === UserRole.ASSISTANT_MANAGER || 
+    currentUser.role === UserRole.TEAM_LEAD
+  ) {
+    return <ManagerView />;
+  }
+
+  // Everyone else (Engineer, Tech, Intern)
+  return <EmployeeView />;
 };
 
 const App: React.FC = () => {

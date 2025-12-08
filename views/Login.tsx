@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/store';
 import { UserRole } from '../types';
-import { LayoutDashboard, ShieldCheck, Building2 } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, Building2, AlertCircle } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
   const { login, registerOrganization } = useStore();
@@ -24,15 +24,20 @@ export const LoginView: React.FC = () => {
     setLoading(true);
 
     if (mode === 'LOGIN') {
-        const success = await login(email, password);
-        if (!success) setError("Invalid email or password.");
+        const errorMsg = await login(email, password);
+        if (errorMsg) {
+            setError(errorMsg);
+        }
     } else {
         if (!orgName || !adminName || !email || !password) {
             setError("All fields are required.");
             setLoading(false);
             return;
         }
-        registerOrganization(orgName, adminName, email, password);
+        const errorMsg = await registerOrganization(orgName, adminName, email, password);
+        if (errorMsg) {
+            setError(errorMsg);
+        }
     }
     setLoading(false);
   };
@@ -115,7 +120,12 @@ export const LoginView: React.FC = () => {
                     />
                 </div>
                 
-                {error && <p className="text-red-500 text-xs text-center bg-red-50 p-2 rounded-lg">{error}</p>}
+                {error && (
+                    <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex items-start gap-2">
+                        <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={16} />
+                        <p className="text-red-600 text-xs text-left leading-relaxed">{error}</p>
+                    </div>
+                )}
 
                 <button 
                     type="submit"
@@ -126,15 +136,6 @@ export const LoginView: React.FC = () => {
                 </button>
             </form>
         </div>
-        
-        {mode === 'LOGIN' && (
-             <p className="text-center text-xs text-slate-400 mt-6 max-w-xs mx-auto">
-                Demo Credentials:<br/>
-                admin@team.com / 123<br/>
-                manager@team.com / 123<br/>
-                john@team.com / 123
-            </p>
-        )}
       </div>
     </div>
   );
